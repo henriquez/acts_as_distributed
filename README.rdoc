@@ -1,6 +1,6 @@
 == Introduction
 
-acts_as_distributed is an ActiveRecord extension that writes all changes to your model into a database table. The table may then be used as a queue to distribute objects and events on objects to other processes and/or databases.  The plugin is designed to work alongside the Use-Uuid plugin (http://github.com/henriquez/Use-Uuid), and expects models to have a 'uuid' column.  Much of the code in this plugin came from Brandon Keeper's acts_as_audited.
+acts_as_distributed is an ActiveRecord extension that writes all changes to your model into a database table. The table may then be used as a queue to distribute objects and events on objects to other processes and/or databases.  The plugin is designed to work alongside the Use-Uuid plugin (http://github.com/henriquez/use_uuid), and expects models to have a 'uuid' column.  Much of the code in this plugin came from Brandon Keeper's acts_as_audited.
 
 The plugin writes the following into a table called 'distributes' for any event that changes state on a model in which 'acts_as_distributed' is specified:
 
