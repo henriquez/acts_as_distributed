@@ -1,0 +1,61 @@
+== Introduction
+
+acts_as_distributed is an ActiveRecord extension that writes all changes to your model into a database table. The table may then be used as a queue to distribute objects and events on objects to other processes and/or databases.  The plugin is designed to work alongside the Use-Uuid plugin (http://github.com/henriquez/Use-Uuid), and expects models to have a 'uuid' column.  Much of the code in this plugin came from Brandon Keeper's acts_as_audited.
+
+The plugin writes the following into a table called 'distributes' for any event that changes state on a model in which 'acts_as_distributed' is specified:
+
+  distributed_id  = the uuid of the object the action took place on
+  changes = a hash of changes to the object, i.e.
+    if create  - all the attributes in the object saved to the db
+    if update  - only the new state of the attributes that changed, not the whole object.
+    if destroy - all the attributes that were in the object now deleted
+  action = the action performed on the object, one of 'update', 'create', or 'destroy'
+
+
+== Installation
+
+1. create a distributes table:
+
+	create_table "distributes", :force => true do |t|
+	  t.string   "distributed_id",   :limit => 36,     :null => false
+	  t.string   "distributed_type"
+	  t.string   "client_id"
+	  t.string   "action"
+	  t.string    "changes"
+	  t.boolean  "error", :default => false
+	  t.string   "messages", :default => ""
+	  t.datetime "processed_at"
+	  t.datetime "created_at"
+	end
+
+2. Declare which models should be distributed.  
+  
+	class User < ActiveRecord::Base
+	  acts_as_distributed :except => [:password, :salt]
+  
+	  def self.current_user
+	  end
+	end
+	
+	All model attributes except those specified by :except will be included in the changes hash.  Using :except means that changes only to the specified fields will NOT result in a new record saved to the distributes table, unless other fields have been changed as well. There is no need to explicitly do anything else - acts_as_distributed uses callbacks to write to the distributes table any time there is a change of state on the relevant model.  If you use straight SQL or rails commands like ModelName.delete that don't trigger callbacks, the change of state will not be recorded.
+	
+3. Install the plugin
+
+ cd vendor/plugins/acts_as_distributed  # or wherever you're putting the plugin.
+ git clone git://github.com/henriquez/acts_as_distributed.git
+  
+
+== Using the contents of the Distributes table
+
+The distributes table is a persistent queue managed by your favorite database.  To replicate object state to another database poll the distributes table.  You can put the distributes table on a different machine/database if performance or availability is a concern.  By looking at the action column and reading the hash in the changes column the same state change can be played on another database.  Even if you are on a shared database, the distributes table is useful for moving events from one process to another process that might need to react to events.  For example if you have a batch process that runs on the same machines as your mongrels and needs to be aware of changes to models.  
+
+See lib/distribute.rb for an example of polling and using events.  This also illustrates some basic error handling and message passing between processes using the queue.  distribute.rb  should be customized to your needs, but make sure to retain the initial portion of the file or you'll break acts_as_distributes too.  
+
+
+
+
+
+
+
+
+
