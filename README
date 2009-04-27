@@ -4,6 +4,7 @@ acts_as_distributed is an ActiveRecord extension that writes all changes to your
 
 The plugin writes the following into a table called 'distributes' for any event that changes state on a model in which 'acts_as_distributed' is specified:
 
+  distributed_type = the camelcased model name
   distributed_id  = the uuid of the object the action took place on
   changes = a hash of changes to the object, i.e.
     if create  - all the attributes in the object saved to the db
